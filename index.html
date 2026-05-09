@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Sanctuary | Focus & Discipline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; min-height: 100vh; font-family: 'Inter', sans-serif; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <nav class="max-w-4xl mx-auto flex justify-around mb-10 glass p-4 rounded-2xl">
+        <button onclick="showPage('study')" class="hover:text-blue-400 flex flex-col items-center"><i data-lucide="book-open"></i><span class="text-xs mt-1">Study</span></button>
+        <button onclick="showPage('motivation')" class="hover:text-yellow-400 flex flex-col items-center"><i data-lucide="zap"></i><span class="text-xs mt-1">Motivate</span></button>
+        <button onclick="showPage('gallery')" class="hover:text-purple-400 flex flex-col items-center"><i data-lucide="image"></i><span class="text-xs mt-1">Notes</span></button>
+        <button onclick="showPage('relief')" class="hover:text-green-400 flex flex-col items-center"><i data-lucide="wind"></i><span class="text-xs mt-1">Relief</span></button>
+    </nav>
+
+    <main class="max-w-4xl mx-auto">
+        
+        <section id="study-page" class="page-content text-center">
+            <div class="glass p-10 rounded-3xl mb-6">
+                <h2 class="text-4xl font-bold mb-4" id="timer-display">25:00</h2>
+                <div class="flex justify-center gap-4">
+                    <button onclick="toggleTimer()" id="timer-btn" class="bg-blue-600 hover:bg-blue-500 px-8 py-2 rounded-full font-bold">START FOCUS</button>
+                    <button onclick="resetTimer()" class="bg-gray-700 px-8 py-2 rounded-full">RESET</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass p-6 rounded-2xl">
+                    <h3 class="text-xl mb-2">Rewards Earned</h3>
+                    <p class="text-3xl font-bold text-yellow-400" id="points">0 pts</p>
+                </div>
+                <div class="glass p-6 rounded-2xl">
+                    <h3 class="text-xl mb-2">Daily Goal</h3>
+                    <p class="text-gray-400 italic">"Discipline is choosing between what you want now and what you want most."</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="motivation-page" class="page-content hidden">
+            <div class="text-center space-y-8">
+                <h2 class="text-3xl font-bold">Vision Board</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass p-8 rounded-3xl border-l-4 border-yellow-500">
+                        <p class="text-2xl italic">"The expert in anything was once a beginner."</p>
+                    </div>
+                    <div class="glass p-8 rounded-3xl border-l-4 border-blue-500">
+                        <p class="text-2xl italic">"Focus on being productive instead of busy."</p>
+                    </div>
+                </div>
+                <button class="mt-10 glass px-6 py-3 rounded-full hover:bg-white/10">Add Custom Affirmation +</button>
+            </div>
+        </section>
+
+        <section id="gallery-page" class="page-content hidden">
+            <h2 class="text-2xl font-bold mb-6">Study Note Archives</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="note-grid">
+                <div class="aspect-square glass rounded-xl flex items-center justify-center border-dashed border-2 border-white/20">
+                    <input type="file" id="imgInput" class="hidden" onchange="addPhoto(event)">
+                    <label for="imgInput" class="cursor-pointer text-center">
+                        <i data-lucide="plus-circle" class="mx-auto"></i>
+                        <p class="text-xs">Upload Note</p>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <section id="relief-page" class="page-content hidden text-center">
+            <h2 class="text-2xl font-bold mb-6">Zen Zone</h2>
+            <div class="glass p-10 rounded-full w-64 h-64 mx-auto flex items-center justify-center animate-pulse border-4 border-green-500/30">
+                <div>
+                    <p class="text-xl font-semibold">Breathe In...</p>
+                    <p class="text-sm text-gray-400">Hold for 4s</p>
+                </div>
+            </div>
+            <div class="mt-10">
+                <p class="mb-4 text-gray-300">Quick Stress Relief Checklist:</p>
+                <ul class="text-left max-w-xs mx-auto space-y-2">
+                    <li>✅ Drink 1 glass of water</li>
+                    <li>✅ Stretch your back for 30s</li>
+                    <li>✅ Look at something 20ft away</li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // PAGE NAVIGATION LOGIC
+        function showPage(pageId) {
+            document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+            document.getElementById(pageId + '-page').classList.remove('hidden');
+        }
+
+        // POMODORO TIMER LOGIC
+        let timeLeft = 25 * 60;
+        let timerId = null;
+        let points = localStorage.getItem('studyPoints') || 0;
+        document.getElementById('points').innerText = points + " pts";
+
+        function updateDisplay() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            document.getElementById('timer-display').innerText = 
+                `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function toggleTimer() {
+            if (timerId) {
+                clearInterval(timerId);
+                timerId = null;
+                document.getElementById('timer-btn').innerText = "RESUME";
+            } else {
+                document.getElementById('timer-btn').innerText = "PAUSE";
+                timerId = setInterval(() => {
+                    timeLeft--;
+                    updateDisplay();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerId);
+                        alert("Session Complete! Reward: 10 Points!");
+                        points = parseInt(points) + 10;
+                        localStorage.setItem('studyPoints', points);
+                        document.getElementById('points').innerText = points + " pts";
+                        resetTimer();
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerId);
+            timerId = null;
+            timeLeft = 25 * 60;
+            updateDisplay();
+            document.getElementById('timer-btn').innerText = "START FOCUS";
+        }
+
+        // PHOTO UPLOAD LOGIC (Local Browser Storage)
+        function addPhoto(event) {
+            const reader = new FileReader();
+            reader.onload = function(){
+                const div = document.createElement('div');
+                div.className = "aspect-square glass rounded-xl overflow-hidden";
+                div.innerHTML = `<img src="${reader.result}" class="w-full h-full object-cover">`;
+                document.getElementById('note-grid').prepend(div);
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        // Initialize Icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
