@@ -1,137 +1,778 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Sanctuary | Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; min-height: 100vh; font-family: 'Inter', sans-serif; }
-        .hidden { display: none; }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Study Studio — Single File Prototype</title>
+<style>
+  :root{
+    --bg:#f6f6f8;--text:#111;--accent:#6b46c1;--muted:#666;
+  }
+  .theme-cozy{--bg:#fff7f0;--text:#2b2b2b;--accent:#b85c38}
+  .theme-night{--bg:#0b1020;--text:#e6eef8;--accent:#6ee7b7}
+  .theme-forest{--bg:#f0fff4;--text:#0b3d2e;--accent:#2f855a}
+  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;background:var(--bg);color:var(--text)}
+  header{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid rgba(0,0,0,0.06)}
+  h1{margin:0;font-size:18px}
+  .container{display:grid;grid-template-columns:320px 1fr 360px;gap:12px;padding:12px}
+  .card{background:rgba(255,255,255,0.8);border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+  .sidebar{height:calc(100vh - 72px);overflow:auto;padding-bottom:40px}
+  .main{height:calc(100vh - 72px);overflow:auto;padding-bottom:40px}
+  .right{height:calc(100vh - 72px);overflow:auto;padding-bottom:40px}
+  label{display:block;font-size:12px;color:var(--muted);margin-top:8px}
+  input[type=range]{width:100%}
+  button{background:var(--accent);color:white;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+  .muted{color:var(--muted);font-size:13px}
+  .row{display:flex;gap:8px;align-items:center}
+  .video-grid{display:flex;gap:8px;flex-wrap:wrap}
+  video{width:160px;height:120px;background:#000;border-radius:8px;object-fit:cover}
+  .file-list{max-height:200px;overflow:auto}
+  .pill{display:inline-block;padding:6px 8px;border-radius:999px;background:rgba(0,0,0,0.06);font-size:12px}
+  .stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(0,0,0,0.04)}
+  canvas{width:100%;height:160px;background:white;border-radius:8px}
+  footer{padding:12px;text-align:center;color:var(--muted);font-size:13px}
+  .lockdown{position:fixed;inset:0;background:rgba(0,0,0,0.9);color:white;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column}
+  .hidden{display:none}
+  @media (max-width:1000px){.container{grid-template-columns:1fr;}.right{order:3}}
+</style>
 </head>
-<body class="p-4 md:p-8">
+<body class="theme-cozy" id="appRoot">
 
-    <nav class="max-w-4xl mx-auto flex justify-around mb-10 glass p-4 rounded-2xl">
-        <button onclick="showPage('study')" class="hover:text-blue-400 flex flex-col items-center"><i data-lucide="book-open"></i><span class="text-xs mt-1">Study</span></button>
-        <button onclick="showPage('motivation')" class="hover:text-yellow-400 flex flex-col items-center"><i data-lucide="zap"></i><span class="text-xs mt-1">Motivate</span></button>
-        <button onclick="showPage('relief')" class="hover:text-green-400 flex flex-col items-center"><i data-lucide="wind"></i><span class="text-xs mt-1">Relief</span></button>
-    </nav>
+<header>
+  <h1>Study Studio</h1>
+  <div class="muted">Cozy prototype • gourav</div>
+  <div style="margin-left:auto" id="xpDisplay" class="pill">XP: 0 • Level 1 • Streak 0</div>
+</header>
 
-    <main class="max-w-4xl mx-auto">
-        <section id="study-page" class="page-content text-center">
-            <div class="glass p-10 rounded-3xl mb-6">
-                <div class="mb-6 flex justify-center gap-2">
-                    <input type="number" id="custom-min" placeholder="Mins" class="w-20 p-2 rounded bg-white/10 border border-white/20 text-center text-white">
-                    <button onclick="setCustomTime()" class="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg text-xs font-bold">SET TIMER</button>
-                </div>
+<div class="container">
+  <!-- LEFT: Controls -->
+  <div class="sidebar">
+    <div class="card">
+      <strong>Virtual Study Room</strong>
+      <div class="muted">Silent co-working (video or avatar)</div>
+      <div style="margin-top:8px" class="row">
+        <button id="joinRoomBtn">Join Room (Local)</button>
+        <button id="leaveRoomBtn" disabled>Leave</button>
+      </div>
+      <div style="margin-top:8px" class="video-grid" id="videoGrid">
+        <!-- local and peers -->
+      </div>
+      <label>Avatar name</label>
+      <input id="avatarName" placeholder="Your avatar name" />
+    </div>
 
-                <h2 class="text-6xl font-bold mb-6" id="timer-display">25:00</h2>
-                
-                <div class="flex justify-center gap-4">
-                    <button onclick="toggleTimer()" id="timer-btn" class="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-full font-bold">START FOCUS</button>
-                    <button onclick="resetTimer()" class="bg-gray-700 px-8 py-3 rounded-full">RESET</button>
-                </div>
+    <div class="card" style="margin-top:12px">
+      <strong>Music & Sound Mixer</strong>
+      <div class="muted">Lo-fi, Rain, Birds, Piano — mix to focus</div>
+      <div style="margin-top:8px">
+        <div class="row"><button id="startAmbient">Start Ambient</button><button id="stopAmbient">Stop</button></div>
+        <div id="mixerControls" style="margin-top:8px"></div>
+      </div>
+    </div>
 
-                <div class="mt-8 pt-6 border-t border-white/10">
-                    <p class="text-xs mb-3 text-gray-400 tracking-widest">FOCUS MUSIC (LO-FI)</p>
-                    <audio id="lofi-player" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
-                    <div class="flex justify-center gap-4">
-                        <button onclick="playMusic()" id="music-btn" class="glass p-3 rounded-full hover:bg-white/20"><i data-lucide="play"></i></button>
-                        <button onclick="pauseMusic()" class="glass p-3 rounded-full hover:bg-white/20"><i data-lucide="pause"></i></button>
-                    </div>
-                </div>
-            </div>
+    <div class="card" style="margin-top:12px">
+      <strong>Themes</strong>
+      <div class="row" style="margin-top:8px">
+        <button data-theme="theme-cozy" class="themeBtn">Cozy Café</button>
+        <button data-theme="theme-night" class="themeBtn">Night Library</button>
+        <button data-theme="theme-forest" class="themeBtn">Forest Cabin</button>
+      </div>
+      <label style="margin-top:10px">Dark Mode</label>
+      <input type="checkbox" id="darkMode" />
+    </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="glass p-6 rounded-2xl">
-                    <h3 class="text-xl mb-2">Study Points</h3>
-                    <p class="text-4xl font-bold text-yellow-400" id="points">0 pts</p>
-                </div>
-                <div class="glass p-6 rounded-2xl">
-                    <h3 class="text-xl mb-2 italic text-gray-300">"Stop wishing, start doing."</h3>
-                </div>
-            </div>
-        </section>
+    <div class="card" style="margin-top:12px">
+      <strong>Pomodoro</strong>
+      <div class="muted">Custom work/break intervals + notifications</div>
+      <label>Work minutes</label><input id="workMin" type="number" value="25" min="1" />
+      <label>Break minutes</label><input id="breakMin" type="number" value="5" min="1" />
+      <div style="margin-top:8px" class="row">
+        <button id="pomStart">Start</button>
+        <button id="pomPause">Pause</button>
+        <button id="pomReset">Reset</button>
+        <button id="lockdownBtn">Lockdown</button>
+      </div>
+      <div style="margin-top:8px" id="pomDisplay" class="muted">Idle</div>
+    </div>
+  </div>
 
-        <section id="motivation-page" class="page-content hidden text-center">
-            <h2 class="text-3xl font-bold mb-8">Daily Discipline</h2>
-            <div class="glass p-8 rounded-3xl border-l-4 border-yellow-500 mb-4">
-                <p class="text-2xl">"The pain of discipline is far less than the pain of regret."</p>
-            </div>
-        </section>
+  <!-- CENTER: Notes, Uploads, Summaries -->
+  <div class="main">
+    <div class="card">
+      <strong>Notes & Uploads</strong>
+      <div class="muted">Upload PDFs, PPT, images, Word (stored locally)</div>
+      <input id="fileInput" type="file" multiple />
+      <div class="file-list" id="fileList"></div>
+      <div style="margin-top:8px">
+        <label>Folder path (Academic Year / Subject / Chapter / Topic)</label>
+        <input id="folderPath" placeholder="2025 / Math / Calculus / Limits" />
+        <button id="saveFileMeta">Save Meta</button>
+      </div>
+    </div>
 
-        <section id="relief-page" class="page-content hidden text-center">
-            <h2 class="text-2xl font-bold mb-6">Breathe</h2>
-            <div class="glass p-10 rounded-full w-48 h-48 mx-auto flex items-center justify-center animate-pulse border-4 border-green-500/30">
-                <p>Focus...</p>
-            </div>
-        </section>
-    </main>
+    <div class="card" style="margin-top:12px">
+      <strong>AI Note Summarizer (placeholder)</strong>
+      <div class="muted">Paste text or select an uploaded text file to auto-summarize</div>
+      <textarea id="textForSummary" rows="6" style="width:100%;margin-top:8px"></textarea>
+      <div style="margin-top:8px" class="row">
+        <button id="summarizeBtn">Summarize</button>
+        <select id="bullets"><option>5</option><option selected>8</option><option>12</option></select>
+      </div>
+      <div id="summaryOutput" style="margin-top:8px"></div>
+    </div>
 
-    <script>
-        let timeLeft = 25 * 60;
-        let timerId = null;
-        let points = localStorage.getItem('studyPoints') || 0;
-        document.getElementById('points').innerText = points + " pts";
+    <div class="card" style="margin-top:12px">
+      <strong>Global Search</strong>
+      <div class="muted">Search across uploaded notes</div>
+      <input id="globalSearch" placeholder="Search keywords..." style="width:60%" />
+      <button id="searchBtn">Search</button>
+      <div id="searchResults" style="margin-top:8px"></div>
+    </div>
 
-        const player = document.getElementById('lofi-player');
+    <div class="card" style="margin-top:12px">
+      <strong>Collaborative Notes (local CRDT placeholder)</strong>
+      <div class="muted">Simple shared editor using local broadcast (same machine)</div>
+      <textarea id="collabEditor" rows="6" style="width:100%"></textarea>
+      <div class="row" style="margin-top:8px">
+        <button id="shareDocBtn">Share (copy link)</button>
+        <button id="saveDocBtn">Save</button>
+      </div>
+    </div>
+  </div>
 
-        function showPage(pageId) {
-            document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
-            document.getElementById(pageId + '-page').classList.remove('hidden');
-        }
+  <!-- RIGHT: Tests, Flashcards, Analytics -->
+  <div class="right">
+    <div class="card">
+      <strong>Exam & Mock Tests</strong>
+      <div class="muted">Create mock tests from notes</div>
+      <label>Test name</label><input id="testName" />
+      <label>Number of questions</label><input id="numQ" type="number" value="5" min="1" />
+      <div style="margin-top:8px" class="row">
+        <button id="genTestBtn">Generate Test</button>
+        <button id="startTestBtn">Start Test</button>
+      </div>
+      <div id="testArea" style="margin-top:8px"></div>
+    </div>
 
-        function setCustomTime() {
-            const mins = document.getElementById('custom-min').value;
-            if (mins > 0) {
-                timeLeft = mins * 60;
-                updateDisplay();
-            }
-        }
+    <div class="card" style="margin-top:12px">
+      <strong>Flashcards (SRS)</strong>
+      <div class="muted">SM‑2 spaced repetition</div>
+      <label>Front</label><input id="cardFront" />
+      <label>Back</label><input id="cardBack" />
+      <div class="row" style="margin-top:8px"><button id="addCardBtn">Add Card</button><button id="reviewBtn">Review Due</button></div>
+      <div id="cardArea" style="margin-top:8px"></div>
+    </div>
 
-        function updateDisplay() {
-            const mins = Math.floor(timeLeft / 60);
-            const secs = timeLeft % 60;
-            document.getElementById('timer-display').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-        }
+    <div class="card" style="margin-top:12px">
+      <strong>Progress Analytics</strong>
+      <div class="muted">Syllabus completion & quiz averages</div>
+      <div class="stat"><div>Syllabus Completion</div><div id="completionPct">0%</div></div>
+      <div class="stat"><div>Average Quiz Score</div><div id="avgScore">0%</div></div>
+      <canvas id="focusChart"></canvas>
+    </div>
 
-        function toggleTimer() {
-            if (timerId) {
-                clearInterval(timerId);
-                timerId = null;
-                document.getElementById('timer-btn').innerText = "RESUME";
-            } else {
-                document.getElementById('timer-btn').innerText = "PAUSE";
-                timerId = setInterval(() => {
-                    timeLeft--;
-                    updateDisplay();
-                    if (timeLeft <= 0) {
-                        clearInterval(timerId);
-                        points = parseInt(points) + 10;
-                        localStorage.setItem('studyPoints', points);
-                        document.getElementById('points').innerText = points + " pts";
-                        alert("Session Done! +10 Points");
-                        resetTimer();
-                    }
-                }, 1000);
-            }
-        }
+    <div class="card" style="margin-top:12px">
+      <strong>Community & Gamification</strong>
+      <div class="muted">Streaks, XP, Leaderboard (local)</div>
+      <div class="stat"><div>Streak</div><div id="streak">0</div></div>
+      <div class="stat"><div>Level</div><div id="level">1</div></div>
+      <div style="margin-top:8px"><button id="claimDaily">Claim Daily Check-in</button></div>
+    </div>
+  </div>
+</div>
 
-        function resetTimer() {
-            clearInterval(timerId);
-            timerId = null;
-            timeLeft = 25 * 60;
-            updateDisplay();
-            document.getElementById('timer-btn').innerText = "START FOCUS";
-        }
+<footer>Prototype — extend with backend, AI, and real-time servers for production</footer>
 
-        function playMusic() { player.play(); }
-        function pauseMusic() { player.pause(); }
+<!-- Lockdown overlay -->
+<div id="lockdownOverlay" class="lockdown hidden">
+  <h2>Lockdown Mode Active</h2>
+  <p style="max-width:600px;text-align:center">Distraction blocker is active. Social sites are hidden and notifications are suppressed. Click "Exit" to stop lockdown.</p>
+  <div style="margin-top:12px"><button id="exitLockdown">Exit Lockdown</button></div>
+</div>
 
-        lucide.createIcons();
-    </script>
+<script>
+/* -------------------------
+  Utilities: IndexedDB wrapper (idb-lite)
+------------------------- */
+const DB_NAME = 'study_studio_v1';
+const DB_VERSION = 1;
+let db;
+function openDB(){
+  return new Promise((res,rej)=>{
+    const r = indexedDB.open(DB_NAME, DB_VERSION);
+    r.onupgradeneeded = e => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains('files')) d.createObjectStore('files',{keyPath:'id',autoIncrement:true});
+      if(!d.objectStoreNames.contains('docs')) d.createObjectStore('docs',{keyPath:'id',autoIncrement:true});
+      if(!d.objectStoreNames.contains('cards')) d.createObjectStore('cards',{keyPath:'id',autoIncrement:true});
+      if(!d.objectStoreNames.contains('meta')) d.createObjectStore('meta',{keyPath:'key'});
+    };
+    r.onsuccess = e => { db = e.target.result; res(db); };
+    r.onerror = e => rej(e);
+  });
+}
+function idbPut(store, val){ return new Promise((res,rej)=>{ const tx = db.transaction(store,'readwrite'); tx.objectStore(store).put(val).onsuccess = ()=>res(true); tx.onerror = rej; }); }
+function idbAdd(store, val){ return new Promise((res,rej)=>{ const tx = db.transaction(store,'readwrite'); tx.objectStore(store).add(val).onsuccess = e=>res(e.target.result); tx.onerror = rej; }); }
+function idbGetAll(store){ return new Promise((res,rej)=>{ const tx = db.transaction(store,'readonly'); const req = tx.objectStore(store).getAll(); req.onsuccess = ()=>res(req.result); req.onerror = rej; }); }
+function idbGet(store, key){ return new Promise((res,rej)=>{ const tx = db.transaction(store,'readonly'); const req = tx.objectStore(store).get(key); req.onsuccess = ()=>res(req.result); req.onerror = rej; }); }
+
+/* -------------------------
+  App state & helpers
+------------------------- */
+const state = {
+  xp: 0, level:1, streak:0,
+  ambientTracks: [
+    {id:'lofi', label:'Lo-fi', url:'https://cdn.jsdelivr.net/gh/itspriddle/ambient@main/lofi.mp3', gain:0.8},
+    {id:'rain', label:'Rain', url:'https://cdn.jsdelivr.net/gh/itspriddle/ambient@main/rain.mp3', gain:0.5},
+    {id:'birds', label:'Birds', url:'https://cdn.jsdelivr.net/gh/itspriddle/ambient@main/birds.mp3', gain:0.4},
+    {id:'piano', label:'Piano', url:'https://cdn.jsdelivr.net/gh/itspriddle/ambient@main/piano.mp3', gain:0.6}
+  ],
+  audioCtx: null, audioElements: {}, gainNodes: {},
+  localStream: null, inRoom:false,
+  pom: {running:false,isWork:true,seconds:1500,work:25,break:5,intervalId:null},
+  files: [], docs: [], cards: []
+};
+
+/* -------------------------
+  Init
+------------------------- */
+(async function init(){
+  await openDB();
+  await loadMeta();
+  renderXP();
+  setupUI();
+  loadStored();
+  registerServiceWorker();
+})();
+
+/* -------------------------
+  Service Worker (offline caching)
+------------------------- */
+function registerServiceWorker(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./study-app-sw.js').catch(()=>{/* ignore */});
+  }
+}
+
+/* -------------------------
+  Load stored meta
+------------------------- */
+async function loadMeta(){
+  const m = await idbGet('meta','userStats');
+  if(m){ state.xp = m.value.xp||0; state.level = m.value.level||1; state.streak = m.value.streak||0; }
+}
+
+/* -------------------------
+  Save meta
+------------------------- */
+async function saveMeta(){
+  await idbPut('meta',{key:'userStats', value:{xp:state.xp,level:state.level,streak:state.streak}});
+  renderXP();
+}
+
+/* -------------------------
+  Render XP / header
+------------------------- */
+function renderXP(){
+  document.getElementById('xpDisplay').textContent = `XP: ${state.xp} • Level ${state.level} • Streak ${state.streak}`;
+  document.getElementById('streak').textContent = String(state.streak);
+  document.getElementById('level').textContent = String(state.level);
+}
+
+/* -------------------------
+  Load stored files/docs/cards
+------------------------- */
+async function loadStored(){
+  state.files = await idbGetAll('files');
+  state.docs = await idbGetAll('docs');
+  state.cards = await idbGetAll('cards');
+  renderFileList();
+  renderCards();
+  updateAnalytics();
+}
+
+/* -------------------------
+  UI wiring
+------------------------- */
+function setupUI(){
+  // Theme buttons
+  document.querySelectorAll('.themeBtn').forEach(b=>{
+    b.addEventListener('click', ()=>{ document.body.className = b.dataset.theme; });
+  });
+  document.getElementById('darkMode').addEventListener('change', e=>{
+    if(e.target.checked) document.body.style.filter = 'invert(0.98) hue-rotate(180deg)';
+    else document.body.style.filter = '';
+  });
+
+  // File uploads
+  document.getElementById('fileInput').addEventListener('change', async e=>{
+    const files = e.target.files;
+    for(const f of files){
+      const arr = await f.arrayBuffer();
+      const id = await idbAdd('files',{name:f.name,type:f.type,blob:arr,uploadedAt:Date.now(),path:document.getElementById('folderPath').value||''});
+      state.files.push({id,name:f.name,type:f.type});
+    }
+    renderFileList();
+    awardXP(5);
+  });
+  document.getElementById('saveFileMeta').addEventListener('click', async ()=>{
+    const path = document.getElementById('folderPath').value;
+    // simple: tag last file
+    const all = await idbGetAll('files');
+    if(all.length){
+      const last = all[all.length-1];
+      last.path = path;
+      await idbPut('files', last);
+      renderFileList();
+    }
+  });
+
+  // Summarizer
+  document.getElementById('summarizeBtn').addEventListener('click', ()=>{
+    const text = document.getElementById('textForSummary').value || '';
+    const bullets = parseInt(document.getElementById('bullets').value,10);
+    const summary = simpleSummarize(text, bullets);
+    document.getElementById('summaryOutput').innerHTML = `<strong>Summary</strong><ul>${summary.map(s=>`<li>${escapeHtml(s)}</li>`).join('')}</ul>`;
+    awardXP(3);
+  });
+
+  // Search
+  document.getElementById('searchBtn').addEventListener('click', async ()=>{
+    const q = document.getElementById('globalSearch').value.toLowerCase();
+    const files = await idbGetAll('files');
+    const hits = files.filter(f => (f.name||'').toLowerCase().includes(q) || (f.path||'').toLowerCase().includes(q));
+    document.getElementById('searchResults').innerHTML = hits.map(h=>`<div class="pill">${escapeHtml(h.name)} — ${escapeHtml(h.path||'')}</div>`).join('');
+  });
+
+  // Collaborative editor (local broadcast)
+  const collab = document.getElementById('collabEditor');
+  collab.addEventListener('input', ()=> localStorage.setItem('collabDoc', collab.value));
+  window.addEventListener('storage', e=>{ if(e.key==='collabDoc') collab.value = e.newValue; });
+
+  document.getElementById('saveDocBtn').addEventListener('click', async ()=>{
+    const id = await idbAdd('docs',{content:collab.value,createdAt:Date.now()});
+    state.docs.push({id,content:collab.value});
+    awardXP(2);
+  });
+
+  // Virtual room
+  document.getElementById('joinRoomBtn').addEventListener('click', joinRoom);
+  document.getElementById('leaveRoomBtn').addEventListener('click', leaveRoom);
+
+  // Ambient audio
+  document.getElementById('startAmbient').addEventListener('click', startAmbient);
+  document.getElementById('stopAmbient').addEventListener('click', stopAmbient);
+
+  // Mixer UI
+  const mixer = document.getElementById('mixerControls');
+  state.ambientTracks.forEach(t=>{
+    const div = document.createElement('div');
+    div.innerHTML = `<div style="display:flex;justify-content:space-between"><div>${t.label}</div><div><input type="checkbox" data-id="${t.id}" class="trackToggle" checked /></div></div>
+      <input type="range" min="0" max="1" step="0.01" value="${t.gain}" data-id="${t.id}" class="trackGain" />`;
+    mixer.appendChild(div);
+  });
+  mixer.addEventListener('input', e=>{
+    if(e.target.classList.contains('trackGain')) setTrackGain(e.target.dataset.id, parseFloat(e.target.value));
+  });
+  mixer.addEventListener('change', e=>{
+    if(e.target.classList.contains('trackToggle')) toggleTrack(e.target.dataset.id, e.target.checked);
+  });
+
+  // Pomodoro
+  document.getElementById('pomStart').addEventListener('click', ()=>pomStart());
+  document.getElementById('pomPause').addEventListener('click', ()=>pomPause());
+  document.getElementById('pomReset').addEventListener('click', ()=>pomReset());
+  document.getElementById('workMin').addEventListener('change', e=> state.pom.work = parseInt(e.target.value,10));
+  document.getElementById('breakMin').addEventListener('change', e=> state.pom.break = parseInt(e.target.value,10));
+  document.getElementById('lockdownBtn').addEventListener('click', ()=>enterLockdown());
+  document.getElementById('exitLockdown').addEventListener('click', ()=>exitLockdown());
+
+  // Tests
+  document.getElementById('genTestBtn').addEventListener('click', generateTest);
+  document.getElementById('startTestBtn').addEventListener('click', startTest);
+
+  // Flashcards
+  document.getElementById('addCardBtn').addEventListener('click', addCard);
+  document.getElementById('reviewBtn').addEventListener('click', reviewDue);
+
+  // Claim daily
+  document.getElementById('claimDaily').addEventListener('click', claimDaily);
+}
+
+/* -------------------------
+  Simple summarizer (placeholder)
+  - Splits into sentences, ranks by keyword density, returns top N
+------------------------- */
+function simpleSummarize(text, bullets=8){
+  if(!text) return ['No text provided'];
+  const sents = text.match(/[^\.!\?]+[\.!\?]*/g) || [text];
+  const words = text.toLowerCase().split(/\W+/).filter(Boolean);
+  const freq = {};
+  words.forEach(w=>freq[w]=(freq[w]||0)+1);
+  const score = sents.map(s=>{
+    const sw = s.toLowerCase().split(/\W+/).filter(Boolean);
+    const sc = sw.reduce((a,w)=>a+(freq[w]||0),0);
+    return {s,sc};
+  });
+  score.sort((a,b)=>b.sc-a.sc);
+  return score.slice(0,bullets).map(x=>x.s.trim());
+}
+
+/* -------------------------
+  File list rendering
+------------------------- */
+async function renderFileList(){
+  const files = await idbGetAll('files');
+  const el = document.getElementById('fileList');
+  el.innerHTML = files.map(f=>`<div style="padding:6px;border-bottom:1px solid rgba(0,0,0,0.03)"><strong>${escapeHtml(f.name)}</strong><div class="muted">${escapeHtml(f.path||'')}</div>
+    <div style="margin-top:6px"><button data-id="${f.id}" class="previewBtn">Preview</button> <button data-id="${f.id}" class="downloadBtn">Download</button></div></div>`).join('');
+  el.querySelectorAll('.previewBtn').forEach(b=>b.addEventListener('click', async e=>{
+    const id = Number(e.target.dataset.id);
+    const rec = await idbGet('files', id);
+    if(!rec) return alert('File not found');
+    const blob = new Blob([rec.blob], {type: rec.type});
+    const url = URL.createObjectURL(blob);
+    window.open(url,'_blank');
+  }));
+  el.querySelectorAll('.downloadBtn').forEach(b=>b.addEventListener('click', async e=>{
+    const id = Number(e.target.dataset.id);
+    const rec = await idbGet('files', id);
+    const blob = new Blob([rec.blob], {type: rec.type});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = rec.name; a.click();
+    awardXP(1);
+  }));
+}
+
+/* -------------------------
+  Audio: Ambient + Mixer
+------------------------- */
+async function startAmbient(){
+  if(!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  for(const t of state.ambientTracks){
+    if(state.audioElements[t.id]) continue;
+    const audio = new Audio(t.url);
+    audio.loop = true; audio.crossOrigin = 'anonymous';
+    const source = state.audioCtx.createMediaElementSource(audio);
+    const gain = state.audioCtx.createGain(); gain.gain.value = t.gain;
+    source.connect(gain).connect(state.audioCtx.destination);
+    state.audioElements[t.id] = audio;
+    state.gainNodes[t.id] = gain;
+    audio.play().catch(()=>{/* autoplay blocked; user must interact */});
+  }
+}
+function stopAmbient(){
+  Object.values(state.audioElements).forEach(a=>{ a.pause(); a.currentTime = 0; });
+  state.audioElements = {}; state.gainNodes = {};
+  if(state.audioCtx){ state.audioCtx.close(); state.audioCtx = null; }
+}
+function setTrackGain(id, value){
+  if(state.gainNodes[id]) state.gainNodes[id].gain.value = value;
+  const t = state.ambientTracks.find(x=>x.id===id); if(t) t.gain = value;
+}
+function toggleTrack(id, enabled){
+  if(enabled) {
+    if(state.audioElements[id]) state.audioElements[id].play();
+  } else {
+    if(state.audioElements[id]) state.audioElements[id].pause();
+  }
+}
+
+/* -------------------------
+  Virtual Room (local peer demo)
+------------------------- */
+async function joinRoom(){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+    state.localStream = stream;
+    const v = document.createElement('video'); v.autoplay = true; v.muted = true; v.playsInline = true;
+    v.srcObject = stream;
+    v.id = 'localVideo';
+    document.getElementById('videoGrid').appendChild(v);
+    document.getElementById('joinRoomBtn').disabled = true;
+    document.getElementById('leaveRoomBtn').disabled = false;
+    state.inRoom = true;
+    awardXP(2);
+  }catch(err){ alert('Camera access denied or not available'); }
+}
+function leaveRoom(){
+  if(state.localStream){ state.localStream.getTracks().forEach(t=>t.stop()); state.localStream = null; }
+  const v = document.getElementById('localVideo'); if(v) v.remove();
+  document.getElementById('joinRoomBtn').disabled = false;
+  document.getElementById('leaveRoomBtn').disabled = true;
+  state.inRoom = false;
+}
+
+/* -------------------------
+  Pomodoro
+------------------------- */
+function pomStart(){
+  if(state.pom.running) return;
+  state.pom.work = parseInt(document.getElementById('workMin').value,10) || 25;
+  state.pom.break = parseInt(document.getElementById('breakMin').value,10) || 5;
+  state.pom.seconds = state.pom.isWork ? state.pom.work*60 : state.pom.break*60;
+  state.pom.running = true;
+  state.pom.intervalId = setInterval(()=>tickPom(),1000);
+  notifyPermission();
+}
+function pomPause(){ state.pom.running = false; clearInterval(state.pom.intervalId); state.pom.intervalId = null; }
+function pomReset(){ pomPause(); state.pom.isWork = true; state.pom.seconds = state.pom.work*60; updatePomDisplay(); }
+function tickPom(){
+  state.pom.seconds--;
+  if(state.pom.seconds <= 0){
+    state.pom.isWork = !state.pom.isWork;
+    state.pom.seconds = (state.pom.isWork ? state.pom.work : state.pom.break) * 60;
+    const msg = state.pom.isWork ? 'Work session started' : 'Break started';
+    notify(msg);
+    if(state.pom.isWork) awardXP(1);
+  }
+  updatePomDisplay();
+}
+function updatePomDisplay(){
+  const s = state.pom.seconds;
+  const mm = Math.floor(s/60), ss = String(s%60).padStart(2,'0');
+  document.getElementById('pomDisplay').textContent = `${state.pom.isWork ? 'Work' : 'Break'} — ${mm}:${ss}`;
+}
+function notifyPermission(){ if(Notification.permission !== 'granted') Notification.requestPermission(); }
+function notify(msg){ if(Notification.permission === 'granted') new Notification(msg); else console.log('Notify:',msg); }
+
+/* -------------------------
+  Lockdown (distraction blocker)
+  - This is a local overlay; real browser-level blocking requires extensions or OS features.
+------------------------- */
+function enterLockdown(){
+  document.getElementById('lockdownOverlay').classList.remove('hidden');
+  awardXP(1);
+}
+function exitLockdown(){
+  document.getElementById('lockdownOverlay').classList.add('hidden');
+}
+
+/* -------------------------
+  Tests: generate simple MCQs from uploaded text (naive)
+------------------------- */
+async function generateTest(){
+  const num = parseInt(document.getElementById('numQ').value,10) || 5;
+  const files = await idbGetAll('files');
+  // naive: extract sentences from all text-like files (if text file) or filenames
+  let pool = [];
+  for(const f of files){
+    if(f.type.startsWith('text') || f.name.endsWith('.txt')){
+      const rec = await idbGet('files', f.id);
+      const txt = new TextDecoder().decode(rec.blob);
+      pool = pool.concat(txt.match(/[^\.!\?]+[\.!\?]*/g) || []);
+    } else {
+      pool.push(f.name);
+    }
+  }
+  if(pool.length===0) pool = ['Define derivative','State Pythagoras theorem','What is photosynthesis?','Name three causes of WWI','Explain Newton\'s 2nd law'];
+  // create MCQs by taking a sentence and making 3 distractors
+  const questions = [];
+  for(let i=0;i<num;i++){
+    const q = pool[i % pool.length].trim();
+    const correct = q.split(' ').slice(0,6).join(' ');
+    const distractors = [
+      'Not related concept',
+      'Opposite idea',
+      'Another unrelated fact'
+    ];
+    questions.push({q,correct,distractors});
+  }
+  localStorage.setItem('lastTest', JSON.stringify(questions));
+  document.getElementById('testArea').innerHTML = `<div class="muted">Test generated with ${questions.length} questions. Click Start Test to begin.</div>`;
+  awardXP(3);
+}
+function startTest(){
+  const raw = localStorage.getItem('lastTest');
+  if(!raw) return alert('No test generated');
+  const questions = JSON.parse(raw);
+  let score = 0, idx = 0;
+  const container = document.getElementById('testArea');
+  function render(){
+    if(idx >= questions.length){
+      container.innerHTML = `<div><strong>Finished</strong><div class="muted">Score: ${score}/${questions.length}</div></div>`;
+      // update analytics
+      const prev = JSON.parse(localStorage.getItem('quizScores')||'[]'); prev.push(score/questions.length*100); localStorage.setItem('quizScores', JSON.stringify(prev));
+      updateAnalytics();
+      awardXP(5);
+      return;
+    }
+    const cur = questions[idx];
+    container.innerHTML = `<div><strong>Q${idx+1}:</strong> ${escapeHtml(cur.q)}</div>
+      <div style="margin-top:8px">${renderOptions(cur)}</div>`;
+    container.querySelectorAll('.optBtn').forEach(b=>b.addEventListener('click', e=>{
+      const val = e.target.dataset.val;
+      if(val === cur.correct) score++;
+      idx++; render();
+    }));
+  }
+  render();
+}
+function renderOptions(cur){
+  const opts = [cur.correct, ...cur.distractors].sort(()=>Math.random()-0.5);
+  return opts.map(o=>`<div style="margin-top:6px"><button class="optBtn" data-val="${escapeHtml(o)}">${escapeHtml(o)}</button></div>`).join('');
+}
+
+/* -------------------------
+  Flashcards (SM-2)
+------------------------- */
+async function addCard(){
+  const front = document.getElementById('cardFront').value.trim();
+  const back = document.getElementById('cardBack').value.trim();
+  if(!front || !back) return alert('Provide front and back');
+  const card = {front,back,ease:2.5,interval:1,repetitions:0,next_review:Date.now()};
+  await idbAdd('cards', card);
+  state.cards = await idbGetAll('cards');
+  renderCards();
+  awardXP(2);
+}
+async function renderCards(){
+  state.cards = await idbGetAll('cards');
+  const el = document.getElementById('cardArea');
+  el.innerHTML = state.cards.map(c=>`<div style="padding:6px;border-bottom:1px solid rgba(0,0,0,0.03)"><strong>${escapeHtml(c.front)}</strong><div class="muted">${escapeHtml(c.back)}</div></div>`).join('');
+}
+async function reviewDue(){
+  const now = Date.now();
+  const cards = await idbGetAll('cards');
+  const due = cards.filter(c=>!c.next_review || c.next_review <= now);
+  if(due.length===0) return alert('No cards due');
+  let idx=0;
+  function show(){
+    if(idx>=due.length) return alert('Review complete');
+    const c = due[idx];
+    const ans = prompt(`Card ${idx+1}/${due.length}\nFront: ${c.front}\n\nType your answer (or leave blank to see back)`);
+    alert(`Back: ${c.back}`);
+    const q = prompt('Rate your recall 0-5 (5=perfect)');
+    const quality = Math.max(0,Math.min(5,Number(q)||0));
+    const updated = sm2(c, quality);
+    idbPut('cards', updated);
+    idx++; show();
+  }
+  show();
+}
+
+/* SM-2 algorithm */
+function sm2(card, quality){
+  if(quality < 3){
+    card.repetitions = 0;
+    card.interval = 1;
+  } else {
+    card.ease = Math.max(1.3, card.ease + 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+    card.repetitions += 1;
+    if(card.repetitions === 1) card.interval = 1;
+    else if(card.repetitions === 2) card.interval = 6;
+    else card.interval = Math.round(card.interval * card.ease);
+  }
+  card.next_review = Date.now() + card.interval * 24 * 60 * 60 * 1000;
+  return card;
+}
+
+/* -------------------------
+  Analytics
+------------------------- */
+function updateAnalytics(){
+  // completion: naive: number of docs / 20
+  const docs = state.docs.length || 0;
+  const pct = Math.min(100, Math.round((docs/20)*100));
+  document.getElementById('completionPct').textContent = pct + '%';
+  const scores = JSON.parse(localStorage.getItem('quizScores')||'[]');
+  const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
+  document.getElementById('avgScore').textContent = avg + '%';
+  drawFocusChart();
+}
+function drawFocusChart(){
+  const c = document.getElementById('focusChart');
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  // fake data: last 7 days study minutes from localStorage
+  const data = JSON.parse(localStorage.getItem('focusMinutes')||'[30,45,60,20,90,0,50]');
+  const w = c.width, h = c.height;
+  const max = Math.max(...data,10);
+  const barW = w / data.length;
+  data.forEach((v,i)=>{
+    const bh = (v/max) * (h-20);
+    ctx.fillStyle = 'rgba(107,70,193,0.8)';
+    ctx.fillRect(i*barW + 6, h - bh - 10, barW - 12, bh);
+  });
+}
+
+/* -------------------------
+  Gamification: XP, streaks
+------------------------- */
+function awardXP(n){
+  state.xp += n;
+  if(state.xp > state.level * 100){
+    state.level++; state.xp = 0;
+  }
+  saveMeta();
+}
+function claimDaily(){
+  const last = localStorage.getItem('lastClaim');
+  const today = new Date().toDateString();
+  if(last === today) return alert('Already claimed today');
+  localStorage.setItem('lastClaim', today);
+  state.streak = (state.streak||0) + 1;
+  awardXP(10);
+  saveMeta();
+}
+
+/* -------------------------
+  Helpers
+------------------------- */
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+/* -------------------------
+  Simple SM-2 test helper (used earlier)
+------------------------- */
+function sm2(card, quality){
+  if(quality < 3){
+    card.repetitions = 0;
+    card.interval = 1;
+  } else {
+    card.ease = Math.max(1.3, card.ease + 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+    card.repetitions += 1;
+    if(card.repetitions === 1) card.interval = 1;
+    else if(card.repetitions === 2) card.interval = 6;
+    else card.interval = Math.round(card.interval * card.ease);
+  }
+  card.next_review = Date.now() + card.interval * 24 * 60 * 60 * 1000;
+  return card;
+}
+
+/* -------------------------
+  Simple security: prevent accidental navigation during lockdown/pomodoro
+------------------------- */
+window.addEventListener('beforeunload', (e)=>{
+  if(document.getElementById('lockdownOverlay') && !document.getElementById('lockdownOverlay').classList.contains('hidden')){
+    e.preventDefault(); e.returnValue = '';
+  }
+});
+
+/* -------------------------
+  Tiny: register a service worker file content via blob (so single-file)
+  - Creates a file study-app-sw.js in same directory via blob URL trick
+------------------------- */
+(function createSWFile(){
+  const swCode = `
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open('study-studio-shell-v1').then(c=>c.addAll(['./','./study-app.html'])));
+  self.skipWaiting();
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+});
+`;
+  // create a blob URL and register it as if it were /study-app-sw.js
+  const blob = new Blob([swCode], {type:'application/javascript'});
+  const url = URL.createObjectURL(blob);
+  // create a tiny link so navigator.serviceWorker.register('./study-app-sw.js') works:
+  // We can't write files to disk; instead, intercept registration to use blob URL
+  const orig = navigator.serviceWorker.register;
+  navigator.serviceWorker.register = function(path){
+    if(path.endsWith('study-app-sw.js')) return orig.call(navigator.serviceWorker, url);
+    return orig.call(navigator.serviceWorker, path);
+  };
+})();
+</script>
 </body>
 </html>
+
